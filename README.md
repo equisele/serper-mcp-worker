@@ -1,94 +1,96 @@
 # 🔍 Serper MCP Worker
 
-Servidor MCP para Claude.ai desplegado como **Cloudflare Worker** (gratis, sin servidor).  
-Expone búsquedas en Google y scraping web a través del protocolo MCP con transporte Streamable HTTP (spec 2025-03-26).
+> 🌐 [Versión en español](README.es.md)
 
-## ¿Qué hace?
+MCP server for Claude.ai deployed as a **Cloudflare Worker** (free, serverless).  
+Exposes Google Search and web scraping through the MCP protocol using Streamable HTTP transport (spec 2025-03-26).
 
-Conecta Claude.ai (web, desktop y **móvil**) con la API de [Serper](https://serper.dev) para que pueda:
+## What it does
 
-- 🔎 **`google_search`** — buscar en Google con filtros de país, idioma, fecha y número de resultados
-- 📄 **`scrape`** — extraer el contenido de texto de cualquier página web
+Connects Claude.ai (web, desktop and **mobile**) to the [Serper](https://serper.dev) API so it can:
 
-## Requisitos
+- 🔎 **`google_search`** — search Google with filters for country, language, date and number of results
+- 📄 **`scrape`** — extract the text content from any web page
 
-- Cuenta en [Cloudflare](https://cloudflare.com) (plan gratuito suficiente)
-- Cuenta en [Serper](https://serper.dev) (2.500 búsquedas/mes gratis)
-- [Node.js](https://nodejs.org) v18 o superior
+## Requirements
+
+- [Cloudflare](https://cloudflare.com) account (free plan is enough)
+- [Serper](https://serper.dev) account (2,500 free searches/month)
+- [Node.js](https://nodejs.org) v18 or higher
 
 ---
 
-## Instalación
+## Installation
 
-### 1. Clona el repositorio
+### 1. Clone the repository
 
 ```bash
 git clone https://github.com/TU_USUARIO/serper-mcp-worker.git
 cd serper-mcp-worker
 ```
 
-### 2. Instala Wrangler
+### 2. Install Wrangler
 
 ```bash
 npm install -g wrangler
 ```
 
-### 3. Autentícate en Cloudflare
+### 3. Authenticate with Cloudflare
 
 ```bash
 wrangler login
 ```
 
-Se abrirá el navegador. Autoriza el acceso y vuelve a la terminal.
+A browser window will open. Authorize access and return to the terminal.
 
-### 4. Añade tu API key de Serper como secret
+### 4. Add your Serper API key as a secret
 
 ```bash
 wrangler secret put SERPER_API_KEY
 ```
 
-Pega tu key cuando la pida y pulsa Enter.
+Paste your key when prompted and press Enter.
 
-> ⚠️ La key se guarda encriptada en Cloudflare. Nunca va al código ni al repositorio.
+> ⚠️ The key is stored encrypted in Cloudflare. It never ends up in your code or repository.
 
-### 5. Despliega
+### 5. Deploy
 
 ```bash
 wrangler deploy
 ```
 
-Al terminar verás:
+When finished you'll see:
 
 ```
 Deployed serper-mcp-worker triggers
-  https://serper-mcp-worker.TU-SUBDOMINIO.workers.dev
+  https://serper-mcp-worker.YOUR-SUBDOMAIN.workers.dev
 ```
 
 ---
 
-## Conectar a Claude.ai
+## Connect to Claude.ai
 
-1. Ve a **Claude.ai → Settings → Integrations → Add custom integration**
-2. Introduce la URL de tu Worker:
+1. Go to **Claude.ai → Settings → Integrations → Add custom integration**
+2. Enter your Worker URL:
    ```
-   https://serper-mcp-worker.TU-SUBDOMINIO.workers.dev/mcp
+   https://serper-mcp-worker.YOUR-SUBDOMAIN.workers.dev/mcp
    ```
-3. Guarda. Claude detectará las herramientas automáticamente.
+3. Save. Claude will detect the tools automatically.
 
-Funciona en **web, desktop y móvil** sin configuración adicional.
+Works on **web, desktop and mobile** with no additional setup.
 
 ---
 
-## Verificar que funciona
+## Verify it works
 
 ### macOS / Linux
 
 ```bash
 # Health check
-curl https://serper-mcp-worker.TU-SUBDOMINIO.workers.dev/health
+curl https://serper-mcp-worker.YOUR-SUBDOMAIN.workers.dev/health
 
-# Listar herramientas disponibles
-curl -X POST https://serper-mcp-worker.TU-SUBDOMINIO.workers.dev/mcp \
+# List available tools
+curl -X POST https://serper-mcp-worker.YOUR-SUBDOMAIN.workers.dev/mcp \
   -H "Content-Type: application/json" \
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'
 ```
@@ -97,10 +99,10 @@ curl -X POST https://serper-mcp-worker.TU-SUBDOMINIO.workers.dev/mcp \
 
 ```powershell
 # Health check
-Invoke-RestMethod https://serper-mcp-worker.TU-SUBDOMINIO.workers.dev/health
+Invoke-RestMethod https://serper-mcp-worker.YOUR-SUBDOMAIN.workers.dev/health
 
-# Listar herramientas disponibles
-Invoke-RestMethod -Uri https://serper-mcp-worker.TU-SUBDOMINIO.workers.dev/mcp `
+# List available tools
+Invoke-RestMethod -Uri https://serper-mcp-worker.YOUR-SUBDOMAIN.workers.dev/mcp `
   -Method POST `
   -ContentType "application/json" `
   -Body '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'
@@ -109,73 +111,83 @@ Invoke-RestMethod -Uri https://serper-mcp-worker.TU-SUBDOMINIO.workers.dev/mcp `
 ### Windows (cmd / Git Bash)
 
 ```bash
-curl -X POST https://serper-mcp-worker.TU-SUBDOMINIO.workers.dev/mcp ^
+curl -X POST https://serper-mcp-worker.YOUR-SUBDOMAIN.workers.dev/mcp ^
   -H "Content-Type: application/json" ^
   -d "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\",\"params\":{}}"
 ```
 
 ---
 
-## Herramientas
+## Tools
 
 ### `google_search`
 
-| Parámetro | Tipo   | Requerido | Descripción |
-|-----------|--------|-----------|-------------|
-| `q`       | string | ✅        | Consulta de búsqueda |
-| `gl`      | string | ❌        | País: `es`, `us`, `mx`... |
-| `hl`      | string | ❌        | Idioma: `es`, `en`... |
-| `num`     | number | ❌        | Resultados (por defecto 10) |
-| `page`    | number | ❌        | Página (por defecto 1) |
-| `tbs`     | string | ❌        | Tiempo: `qdr:d` (día), `qdr:w` (semana), `qdr:m` (mes) |
+| Parameter | Type   | Required | Description |
+|-----------|--------|----------|-------------|
+| `q`       | string | ✅       | Search query |
+| `gl`      | string | ❌       | Country: `es`, `us`, `mx`... |
+| `hl`      | string | ❌       | Language: `es`, `en`... |
+| `num`     | number | ❌       | Number of results (default 10) |
+| `page`    | number | ❌       | Results page (default 1) |
+| `tbs`     | string | ❌       | Time filter: `qdr:d` (day), `qdr:w` (week), `qdr:m` (month) |
 
 ### `scrape`
 
-| Parámetro | Tipo   | Requerido | Descripción |
-|-----------|--------|-----------|-------------|
-| `url`     | string | ✅        | URL a extraer |
+| Parameter | Type   | Required | Description |
+|-----------|--------|----------|-------------|
+| `url`     | string | ✅       | URL to scrape |
 
 ---
 
 ## Endpoints
 
-| Método   | Ruta      | Descripción |
+| Method   | Path      | Description |
 |----------|-----------|-------------|
-| `POST`   | `/mcp`    | Mensajes MCP (JSON-RPC 2.0) |
-| `GET`    | `/mcp`    | Stream SSE para notificaciones |
-| `DELETE` | `/mcp`    | Terminar sesión |
-| `GET`    | `/health` | Estado del servidor |
-| `GET`    | `/`       | Info del servidor |
+| `POST`   | `/mcp`    | MCP messages (JSON-RPC 2.0) |
+| `GET`    | `/mcp`    | SSE stream for server notifications |
+| `DELETE` | `/mcp`    | Terminate session |
+| `GET`    | `/health` | Server status |
+| `GET`    | `/`       | Server info |
 
 ---
 
-## Actualizar el Worker
+## Update the Worker
 
 ```bash
 git pull
 wrangler deploy
 ```
 
-La `SERPER_API_KEY` guardada como secret no se pierde al redesplegar.
+The `SERPER_API_KEY` secret is not lost when redeploying.
 
 ---
 
-## Costes
+## Pricing
 
-| Servicio           | Plan gratuito               |
+| Service            | Free tier                   |
 |--------------------|-----------------------------|
-| Cloudflare Workers | 100.000 peticiones/día      |
-| Serper             | 2.500 búsquedas/mes         |
+| Cloudflare Workers | 100,000 requests/day        |
+| Serper             | 2,500 searches/month        |
 
-Ambos suficientes para uso personal.
+Both are sufficient for personal use.
 
 ---
 
-## Créditos
+## Contributing
 
-Basado en la API de [Serper](https://serper.dev) y el protocolo [MCP](https://modelcontextprotocol.io) de Anthropic.  
-Transporte: Streamable HTTP spec `2025-03-26`.
+1. Fork the repository
+2. Create a branch: `git checkout -b feature/your-feature`
+3. Commit your changes: `git commit -m 'feat: your feature'`
+4. Push to the branch: `git push origin feature/your-feature`
+5. Open a Pull Request
 
-## Licencia
+---
+
+## Credits
+
+Built on the [Serper](https://serper.dev) API and Anthropic's [MCP](https://modelcontextprotocol.io) protocol.  
+Transport: Streamable HTTP spec `2025-03-26`.
+
+## License
 
 MIT

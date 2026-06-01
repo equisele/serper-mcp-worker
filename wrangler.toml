@@ -1,0 +1,8 @@
+name = "serper-mcp-worker"
+main = "worker.js"
+compatibility_date = "2024-11-01"
+workers_dev = true
+preview_urls = false
+
+# SERPER_API_KEY se añade como secret (nunca aquí):
+# wrangler secret put SERPER_API_KEY
